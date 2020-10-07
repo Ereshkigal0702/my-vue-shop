@@ -38,7 +38,7 @@
               <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeUserById(scope.row.id)"></el-button>
             </el-tooltip>
             <el-tooltip effect="light" content="分配角色" placement="bottom" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button type="warning" icon="el-icon-setting" size="mini" @click="setRole(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -49,6 +49,7 @@
       </el-pagination>
     </el-card>
 
+    <!-- 添加编辑 -->
     <el-dialog :title="dialogTitle" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
       <el-form ref="addFormRef" label-width="80px" :model="addForm" :rules="addFormRules">
         <el-form-item label="用户名" prop="username">
@@ -67,6 +68,26 @@
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="addUser">确 定</el-button>
         <el-button @click="addDialogVisible = false">取 消</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 分配角色 -->
+    <el-dialog title="分配角色" :visible.sync="roleDialogVisible" width="50%" @close="roleDialogClosed">
+      <div>
+        <p>当前的用户：{{roleInfo.username}}</p>
+        <p>当前的角色：{{roleInfo.role_name}}</p>
+        <p>
+          分配新角色：
+          <el-select v-model="selectRoleId" aria-placeholder="请选择">
+            <el-option v-for="item in rolesList" :key="item.id"
+              :label="item.roleName" :value="item.id">
+            </el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
+        <el-button @click="roleDialogVisible = false">取 消</el-button>
       </span>
     </el-dialog>
   </div>
@@ -88,6 +109,7 @@ export default {
       total: 0,
       dialogTitle: '',
       addDialogVisible: false,
+      roleDialogVisible: false,
       isEdit: false,
       addForm: {
         username: '',
@@ -100,7 +122,11 @@ export default {
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 5, max: 15, message: '密码长度要在5到15之间', trigger: 'blur' }],
         email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }],
         mobile: [{ required: true, message: '请输入手机号', trigger: 'blur' }, { validator: checkMobile, trigger: 'blur' }]
-      }
+      },
+      roleInfo: [],
+      rolesList: [],
+      // 选中的角色ID
+      selectRoleId: ''
     }
   },
   created() {
@@ -199,6 +225,25 @@ export default {
             message: '已取消删除'
           })
         })
+    },
+    async setRole(role) {
+      this.roleInfo = role
+      const { data: res } = await this.$http('roles')
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.rolesList = res.data
+      this.roleDialogVisible = true
+    },
+    roleDialogClosed() {
+      this.selectRoleId = ''
+      this.roleInfo = ''
+    },
+    async saveRoleInfo() {
+      if (!this.selectRoleId) return this.$message.error('请选择要分配的角色!')
+      const { data: res } = await this.$http.put(`users/${this.roleInfo.id}/role`, { rid: this.selectRoleId })
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.$message.success(res.meta.msg)
+      this.getUserList()
+      this.roleDialogVisible = false
     }
   }
 }

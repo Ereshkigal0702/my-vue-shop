@@ -4,7 +4,7 @@ body,
   height: 100%;
   padding: 0;
   margin: 0;
-  min-width: 1366px;
+  min-width: 1200px;
 }
 
 .el-breadcrumb {
@@ -22,12 +22,20 @@ body,
 
 .el-pagination {
   margin-top: 15px;
-  margin-bottom:5px;
+  margin-bottom: 5px;
   float: right;
 }
 
 .el-pagination:after {
   clear: both;
-  display:block;
+  display: block;
   content: '';
+}
+
+.zk-table {
+  margin-top: 15px;
+}
+
+.el-cascader-panel{
+  height: 200px;
 }
